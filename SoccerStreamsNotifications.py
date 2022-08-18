@@ -82,11 +82,13 @@ def main():
             # Check if match has started
             if LOG_status == "notstarted" and status == "inprogress":
                 print(eventId + " - started")
+                print(homeTeam + " VS " + awayTeam)
                 yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "START - " + homeTeam + " VS " + awayTeam)
 
             # Check is match has updated score
             elif status == "inprogress" and (LOG_homeScore != homeScore or LOG_awayScore != awayScore):
                 print(eventId + " - updated score")
+                print(homeTeam + " VS " + awayTeam " @ " + minute + "'")
                 print(LOG_homeScore + "-" + LOG_awayScore)
                 print(homeScore + "-" + awayScore)
                 yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "SCORE (" + minute + "') - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
@@ -94,16 +96,19 @@ def main():
             # Check if game is half time
             elif LOG_status == "inprogress" and status == "halftime":
                 print(eventId + " - halftime")
+                print(homeTeam + " VS " + awayTeam)
                 yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "HALF-TIME - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Check if game has resumed
             elif LOG_status == "halftime" and status == "inprogress":
                 print(eventId + " - resumed")
+                print(homeTeam + " VS " + awayTeam)
                 yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "RESUMED - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Check if mathc has finished
             elif LOG_status == "inprogress" and status == "finished":
                 print(eventId + " - finished")
+                print(homeTeam + " VS " + awayTeam)
                 yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "FULL-TIME - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Update match on JSON_REPORT is game hasn't finished
