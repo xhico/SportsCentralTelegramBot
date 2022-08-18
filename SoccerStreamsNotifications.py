@@ -6,9 +6,12 @@ import datetime
 import json
 import os
 import traceback
+from operator import getitem
+
 import yagmail
 import psutil
 import requests
+from collections import OrderedDict
 
 
 def get911(key):
@@ -40,19 +43,24 @@ def getMatches():
     yesterdayJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + yesterday).content)
     today = datetime.datetime.now().strftime("%Y-%m-%d")
     todayJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + today).content)
-    allJSON = {"yesterday": yesterdayJSON, "today": todayJSON}
+    tomorrow = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(1), "%Y-%m-%d")
+    tomorrowJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + tomorrow).content)
+    allJSON = {"yesterday": yesterdayJSON, "today": todayJSON, "tomorrow": tomorrowJSON}
 
     # Iterate over every event
     for event in [event for dayJSON in allJSON.values() for league in dayJSON for event in league["events"]]:
-        eventId = str(event["id"])
+        eventId = event["id"]
         homeTeam = str(event["homeTeam"]["name"])
         awayTeam = str(event["awayTeam"]["name"])
-        homeScore = str(event["homeScore"]["current"])
-        awayScore = str(event["awayScore"]["current"])
-        minute = str(event["minute"])
+        homeScore = event["homeScore"]["current"]
+        awayScore = event["awayScore"]["current"]
+        minute = event["minute"]
         status = "halftime" if str(event["statusDescription"]) == "HF" else str(event["status"]["type"])
-        matches[eventId] = {"homeTeam": homeTeam, "awayTeam": awayTeam, "homeScore": homeScore, "awayScore": awayScore, "minute": minute, "status": status}
+        startTimestamp = event["startTimestamp"]
+        matches[eventId] = {"homeTeam": homeTeam, "awayTeam": awayTeam, "homeScore": homeScore, "awayScore": awayScore, "minute": minute, "status": status, "startTimestamp": startTimestamp}
 
+    # Sort matches by startTimestamp
+    matches = dict(OrderedDict(sorted(matches.items(), key=lambda x: getitem(x[1], 'startTimestamp'))))
     return matches
 
 
@@ -63,6 +71,7 @@ def main():
 
     # Iterate over every match
     for eventId, match in getMatches().items():
+        eventId = str(eventId)
 
         # Get match info
         homeScore, awayScore, status = match["homeScore"], match["awayScore"], match["status"]
@@ -70,7 +79,7 @@ def main():
 
         # If match not in JSON_REPORT -> add
         if eventId not in JSON_REPORT and status != "finished":
-            print(str(eventId) + " - add")
+            print(eventId, "ADD")
             JSON_REPORT[eventId] = match
 
         # If match is already in JSON_REPORT -> check for changes
@@ -81,35 +90,36 @@ def main():
 
             # Check if match has started
             if LOG_status == "notstarted" and status == "inprogress":
-                print(eventId + " - started")
-                print(homeTeam + " VS " + awayTeam)
-                yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "START - " + homeTeam + " VS " + awayTeam)
+                print(eventId, "START")
+                print(homeTeam, "VS", awayTeam)
+                # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "START - " + homeTeam + " VS " + awayTeam)
 
             # Check is match has updated score
             elif status == "inprogress" and (LOG_homeScore != homeScore or LOG_awayScore != awayScore):
-                print(eventId + " - updated score")
-                print(homeTeam + " VS " + awayTeam + " @ " + minute + "'")
-                print(LOG_homeScore + "-" + LOG_awayScore)
-                print(homeScore + "-" + awayScore)
-                yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "SCORE (" + minute + "') - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
+                print(eventId, "SCORE")
+                print(homeTeam, "VS", awayTeam, "@", minute)
+                print(LOG_homeScore, "-", LOG_awayScore)
+                print(homeScore, "-", awayScore)
+                # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "SCORE (" + minute + "') - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Check if game is half time
             elif LOG_status == "inprogress" and status == "halftime":
-                print(eventId + " - halftime")
-                print(homeTeam + " VS " + awayTeam)
-                yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "HALF-TIME - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
+                print(eventId, "HALF-TIME")
+                print(homeTeam, "VS", awayTeam)
+                # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "HALF-TIME - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Check if game has resumed
             elif LOG_status == "halftime" and status == "inprogress":
-                print(eventId + " - resumed")
-                print(homeTeam + " VS " + awayTeam)
-                yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "RESUMED - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
+                print(eventId, "RESUMED")
+                print(homeTeam, "VS", awayTeam)
+                # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "RESUMED - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Check if mathc has finished
             elif LOG_status == "inprogress" and status == "finished":
-                print(eventId + " - finished")
-                print(homeTeam + " VS " + awayTeam)
-                yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "FULL-TIME - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
+                print(eventId, "FULL-TIME")
+                print(homeTeam, "VS", awayTeam)
+                print(homeScore, "-", awayScore)
+                # yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "FULL-TIME - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
 
             # Update match on JSON_REPORT is game hasn't finished
             if status == "finished":
@@ -120,6 +130,9 @@ def main():
     # Remove Finished games
     for eventId in eventIdsToRemove:
         del JSON_REPORT[eventId]
+
+    # Sort JSON_REPORT by startTimestamp
+    JSON_REPORT = dict(OrderedDict(sorted(JSON_REPORT.items(), key=lambda x: getitem(x[1], 'startTimestamp'))))
 
     # Save log
     with open(LOG_FILE, "w") as outFile:
@@ -132,7 +145,6 @@ if __name__ == "__main__":
 
     # Set temp folder
     LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.json")
-
 
     # Check if script is already running
     procs = [proc for proc in psutil.process_iter(attrs=["cmdline"]) if os.path.basename(__file__) in '\t'.join(proc.info["cmdline"])]
