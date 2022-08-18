@@ -88,7 +88,7 @@ def main():
             # Check is match has updated score
             elif status == "inprogress" and (LOG_homeScore != homeScore or LOG_awayScore != awayScore):
                 print(eventId + " - updated score")
-                print(homeTeam + " VS " + awayTeam " @ " + minute + "'")
+                print(homeTeam + " VS " + awayTeam + " @ " + minute + "'")
                 print(LOG_homeScore + "-" + LOG_awayScore)
                 print(homeScore + "-" + awayScore)
                 yagmail.SMTP(EMAIL_USER, EMAIL_APPPW).send(EMAIL_RECEIVER, "SCORE (" + minute + "') - " + homeTeam + "(" + homeScore + ")" + " VS " + awayTeam + "(" + awayScore + ")")
