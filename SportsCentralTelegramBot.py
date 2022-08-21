@@ -5,13 +5,14 @@
 import datetime
 import json
 import os
+import time
 import traceback
 from operator import getitem
 
 import psutil
 import requests
 from collections import OrderedDict
-
+import random
 import yagmail
 from telegram import Bot
 
@@ -43,13 +44,20 @@ def getMatches():
     matches = {}
 
     # Get Leagues JSON
-    yesterday = datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(1), "%Y-%m-%d")
-    yesterdayJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + yesterday).content)
-    today = datetime.datetime.now().strftime("%Y-%m-%d")
-    todayJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + today).content)
-    tomorrow = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(1), "%Y-%m-%d")
-    tomorrowJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + tomorrow).content)
-    allJSON = {"yesterday": yesterdayJSON, "today": todayJSON, "tomorrow": tomorrowJSON}
+    try:
+        yesterday = datetime.datetime.strftime(datetime.datetime.now() - datetime.timedelta(1), "%Y-%m-%d")
+        yesterdayJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + yesterday).content)
+        time.sleep(random.randint(3, 9))
+
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        todayJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + today).content)
+        time.sleep(random.randint(3, 9))
+
+        tomorrow = datetime.datetime.strftime(datetime.datetime.now() + datetime.timedelta(1), "%Y-%m-%d")
+        tomorrowJSON = json.loads(requests.get("https://sportscentral.io/new-api/matches?date=" + tomorrow).content)
+        allJSON = {"yesterday": yesterdayJSON, "today": todayJSON, "tomorrow": tomorrowJSON}
+    except Exception as ex:
+        return {}
 
     # Iterate over every event
     # for event in [event for dayJSON in allJSON.values() for league in dayJSON for event in league["events"]]:
