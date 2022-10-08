@@ -2,25 +2,20 @@
 # !/usr/bin/python3
 
 # python3 -m pip install yagmail psutil python-telegram-bot --no-cache-dir
+
 import datetime
 import json
 import os
 import time
 import traceback
-from operator import getitem
-
 import psutil
 import requests
-from collections import OrderedDict
 import random
 import yagmail
+from collections import OrderedDict
+from operator import getitem
 from telegram import Bot
-
-
-def get911(key):
-    with open('/home/pi/.911') as f:
-        data = json.load(f)
-    return data[key]
+from Misc import get911
 
 
 EMAIL_USER = get911('EMAIL_USER')
