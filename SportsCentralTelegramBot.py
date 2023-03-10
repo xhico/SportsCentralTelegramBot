@@ -17,7 +17,6 @@ from operator import getitem
 from telegram import Bot
 from Misc import get911
 
-
 EMAIL_USER = get911('EMAIL_USER')
 EMAIL_APPPW = get911('EMAIL_APPPW')
 EMAIL_RECEIVER = get911('EMAIL_RECEIVER')
