@@ -11,7 +11,6 @@ import traceback
 import psutil
 import requests
 import random
-import yagmail
 from collections import OrderedDict
 from operator import getitem
 from telegram import Bot
