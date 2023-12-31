@@ -1,0 +1,3 @@
+psutil
+python-telegram-bot
+requests

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/python3
 
-# python3 -m pip install yagmail psutil python-telegram-bot --no-cache-dir
-
 import datetime
 import json
 import os
